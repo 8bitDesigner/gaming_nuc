@@ -9,15 +9,28 @@ CEC_WAKE=${CEC_WAKE:-true}
 CEC_SETSOURCE=${CEC_SETSOURCE:-true}
 CEC_ONPOWEROFF_STANDBY=${CEC_ONPOWEROFF_STANDBY:-true}
 CEC_ONSLEEP_STANDBY=${CEC_ONSLEEP_STANDBY:-false}
+CEC_OSD_NAME=${CEC_OSD_NAME:-$(hostname)}
+
+args=()
+args+=( "--single-command" )
+args+=( "--log-level 1" )
+args+=( "--osd-name $CEC_OSD_NAME" )
+
+# Conditionally apply a port number override if one is set
+[[ -n "$CEC_PORT_NUMBER" ]] && args+=( "--port $CEC_PORT_NUMBER" )
 
 # Run specified actions
 if [ "${ACTION}" = "onboot" ] && [ "$CEC_WAKE" = true ]; then
-    echo "on $CEC_TVID" | cec-client -s -d 1
+    echo "on $CEC_TVID" | cec-client ${args[@]}
+
     if [ "$CEC_SETSOURCE" = true ]; then
-            echo "as" | cec-client -s -d 1
+            echo "as" | cec-client ${args[@]}
     fi
 elif [ "${ACTION}" = "onpoweroff" ] && [ "$CEC_ONPOWEROFF_STANDBY" = true ]; then
-    echo "standby $CEC_TVID" | cec-client -s -d 1
+    echo "standby $CEC_TVID" | cec-client ${args[@]}
 elif [ "${ACTION}" = "onsleep" ] && [ "$CEC_ONSLEEP_STANDBY" = true ]; then
-    echo "standby $CEC_TVID" | cec-client -s -d 1
+    echo "standby $CEC_TVID" | cec-client ${args[@]}
+else
+    echo "\"$ACTION\" is not a valid action or is not currently enabled"
+    exit 1
 fi
